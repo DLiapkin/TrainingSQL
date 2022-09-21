@@ -22,9 +22,8 @@ create table if not exists `bank`(
 create table if not exists `client`(
 	id int unsigned not null primary key auto_increment,
     `name` varchar(255) not null,
-    accountId int unsigned not null,
-    socialRoleId int unsigned not null,
-    `account` int default 0
+    accountId int unsigned default null,
+    socialRoleId int unsigned not null
 );
 
 create table if not exists `account`(
@@ -38,6 +37,7 @@ create table if not exists `account`(
 
 create table if not exists `socialRole`(
 	id int unsigned not null primary key auto_increment,
+    `name` varchar(255) not null default '',
     `addition` int unsigned default 0
 );
 
@@ -50,7 +50,16 @@ create table if not exists `card`(
 
 -- adding constraints to client's table
 alter table  `client`
-	add constraint FK_socialRoleId foreign key (socialRoleId) references `socialRole`(id) on update cascade on delete cascade,
-    add constraint FK_accountId foreign key (accountId) references `account`(id) on update cascade on delete cascade;
-    
+add constraint FK_socialRoleId foreign key (socialRoleId) references `socialRole`(id) on update cascade on delete cascade,
+add constraint FK_accountId foreign key (accountId) references `account`(id) on update cascade on delete cascade;
 
+-- adding values into the tables
+insert into `bank`(`name`, `city`, `adress`) values ('Belarusbank', 'Minsk', 'Yakuba Kolasa'), 
+('Belarusbank', 'Gomel', 'Dimitrava'),
+('VTB', 'Gomel', 'Frunze'),
+('VTB', 'Gomel', 'Lenina'),
+('Belinvest', 'Grodno', 'Pushkina');
+
+insert into `socialRole`(`name`, `addition`) values ('veteran', '500'),
+('disabled', '1000'),
+('base', '0');
