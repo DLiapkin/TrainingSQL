@@ -1,142 +1,160 @@
-create database sql_test;
+CREATE DATABASE sql_test;
 
 GO
 
-use sql_test;
-EXEC sp_msforeachtable "ALTER TABLE ? NOCHECK CONSTRAINT all";
-drop table if exists city;
-drop table if exists account;
-drop table if exists filial;
-drop table if exists bank;
-drop table if exists client;
-drop table if exists socialStatus;
-drop table if exists card;
-EXEC sp_msforeachtable "ALTER TABLE ? CHECK CONSTRAINT all";
+USE sql_test;
 
-create table bank(
-	id int check (id > 0) not null primary key identity,
-    name varchar(255) not null
-);
+CREATE TABLE bank (
+	id INT CHECK (id > 0) NOT NULL PRIMARY KEY identity,
+	name VARCHAR(255) NOT NULL
+	);
 
-create table city(
-	id int check (id > 0) not null primary key identity,
-    name varchar(255) not null
-);
+CREATE TABLE city (
+	id INT CHECK (id > 0) NOT NULL PRIMARY KEY identity,
+	name VARCHAR(255) NOT NULL
+	);
 
-create table filial(
-	id int check (id > 0) not null primary key identity,
-    cityId int check (cityId > 0) default null,
-    adress varchar(255) not null,
-    bankId int check (bankId > 0) default null,
-    foreign key (bankId) references bank(id) on update cascade on delete cascade,
-    foreign key (cityId) references city(id) on update cascade on delete cascade
-);
+CREATE TABLE filial (
+	id INT CHECK (id > 0) NOT NULL PRIMARY KEY identity,
+	cityId INT CHECK (cityId > 0) DEFAULT NULL,
+	adress VARCHAR(255) NOT NULL,
+	bankId INT CHECK (bankId > 0) DEFAULT NULL,
+	FOREIGN KEY (bankId) REFERENCES bank(id) ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY (cityId) REFERENCES city(id) ON UPDATE CASCADE ON DELETE CASCADE
+	);
 
-create table socialStatus(
-	id int check (id > 0) not null primary key identity,
-    name varchar(255) not null default ''
-);
+CREATE TABLE socialStatus (
+	id INT CHECK (id > 0) NOT NULL PRIMARY KEY identity,
+	name VARCHAR(255) NOT NULL DEFAULT ''
+	);
 
-create table client(
-	id int check (id > 0) not null primary key identity,
-    name varchar(255) not null,
-    socialStatusId int check (socialStatusId > 0) not null
-);
+CREATE TABLE client (
+	id INT CHECK (id > 0) NOT NULL PRIMARY KEY identity,
+	name VARCHAR(255) NOT NULL,
+	socialStatusId INT CHECK (socialStatusId > 0) NOT NULL,
+	FOREIGN KEY (socialStatusId) REFERENCES socialStatus (id) ON UPDATE CASCADE ON DELETE CASCADE
+	);
 
-create table account(
-	id int check (id > 0) not null primary key identity,
-    bankId int check (bankId > 0) not null,
-    clientId int check (clientId > 0) not null,
-    amount int default 0,
-    foreign key (bankId) references bank(id) on update cascade on delete cascade,
-    foreign key (clientId) references client(id) on update cascade on delete cascade
-);
+CREATE TABLE account (
+	id INT CHECK (id > 0) NOT NULL PRIMARY KEY identity,
+	bankId INT CHECK (bankId > 0) NOT NULL,
+	clientId INT CHECK (clientId > 0) NOT NULL,
+	amount INT DEFAULT 0,
+	FOREIGN KEY (bankId) REFERENCES bank(id) ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY (clientId) REFERENCES client(id) ON UPDATE CASCADE ON DELETE CASCADE,
+	UNIQUE(bankId, clientId)
+	);
 
-create table card(
-	id int check (id > 0) not null primary key identity,
-    accountId int check (accountId > 0) not null,
-    amount int default 0,
-    foreign key (accountId) references account(id) on update cascade on delete cascade
-);
+CREATE TABLE card (
+	id INT CHECK (id > 0) NOT NULL PRIMARY KEY identity,
+	accountId INT CHECK (accountId > 0) NOT NULL,
+	amount INT DEFAULT 0,
+	FOREIGN KEY (accountId) REFERENCES account(id) ON UPDATE CASCADE ON DELETE CASCADE
+	);
 
-alter table  client
-add constraint FK_socialRoleId foreign key (socialStatusId) references socialStatus(id) on update cascade on delete cascade;
+INSERT INTO bank (name)
+VALUES ('Belarusbank'),
+	('VTB'),
+	('Belinvest'),
+	('BNB'),
+	('Belagroprombank');
+
+INSERT INTO city (name)
+VALUES ('Minsk'),
+	('Gomel'),
+	('Grodno'),
+	('Mogilev'),
+	('Brest');
+
+INSERT INTO filial (cityId,adress,bankId)
+VALUES (1,'Yakuba Kolasa 12',1),
+	(2,'Dimitrava 20',1),
+	(2,'Frunze 3',2),
+	(2,'Lenina 45',2),
+	(3,'Sovetskih Pogranichnikov 92',3),
+	(1,'Pobedi 12',4),
+	(4,'Mira 55',5);
+
+INSERT INTO socialStatus (name)
+VALUES ('veteran'),
+	('disabled'),
+	('retiree'),
+	('unemployed'),
+	('base');
+
+INSERT INTO client (name,socialStatusId)
+VALUES ('Petr',1),
+	('Ivan',2),
+	('Dmitry',5),
+	('Vasya',4),
+	('Maxim',3);
+
+INSERT INTO account (bankId,clientId,amount)
+VALUES (1,1,1000),
+	(2,2,1000),
+	(3,3,1000),
+	(4,4,500),
+	(5,5,500);
+
+INSERT INTO card (accountId,amount)
+VALUES (1,100),
+	(1,100),
+	(2,100),
+	(2,200),
+	(3,50),
+	(3,150),
+	(4,25),
+	(4,75),
+	(5,155),
+	(5,145);
 
 GO
 
-insert into bank(name) values ('Belarusbank'), ('VTB'), ('Belinvest'), ('BNB'), ('Belagroprombank');
-
-insert into city(name) values ('Minsk'), ('Gomel'), ('Grodno'), ('Mogilev'), ('Brest');
-
-insert into filial(cityId, adress, bankId) values (1, 'Yakuba Kolasa 12', 1), 
-(2, 'Dimitrava 20', 1),
-(2, 'Frunze 3', 2),
-(2, 'Lenina 45', 2),
-(3, 'Sovetskih Pogranichnikov 92', 3),
-(1, 'Pobedi 12', 4),
-(4, 'Mira 55', 5);
-
-insert into socialStatus(name) values ('veteran'), ('disabled'), ('retiree'), ('unemployed'), ('base');
-
-insert into client(name, socialStatusId) values ('Petr', 1), ('Ivan', 2), ('Dmitry', 5), ('Vasya', 4), ('Maxim', 3);
-
-insert into account(bankId, clientId, amount) values (1, 1, 1000), (2, 2, 1000), (3, 3, 1000), (4, 4, 500), (5, 5, 500);
-
-insert into card(accountId, amount) values (1, 100), (1, 100),
-(2, 100), (2, 200),
-(3, 50), (3, 150),
-(4, 25), (4, 75),
-(5, 155), (5, 145);
-
-GO
-
---TASKS
+-- TASKS
 -- 1st task
 SELECT DISTINCT bank.name
 FROM bank
-JOIN filial ON bank.id = filial.bankId
-JOIN city ON filial.cityId = city.id
+	JOIN filial ON bank.id = filial.bankId
+	JOIN city ON filial.cityId = city.id
 WHERE city.name = 'Gomel';
 
 -- 2nd task
 SELECT card.amount, client.name, bank.name
 FROM bank
-JOIN account ON bank.id = account.bankId
-JOIN client ON account.clientId = client.id
-JOIN card ON account.id = card.accountid;
+	JOIN account ON bank.id = account.bankId
+	JOIN client ON account.clientId = client.id
+	JOIN card ON account.id = card.accountid;
 
 -- 3rd task
 SELECT accountId, sum(card.amount) AS summ, account.amount - sum(card.amount) AS difference
 FROM card
-LEFT JOIN account ON account.id = card.accountId
+	LEFT JOIN account ON account.id = card.accountId
 GROUP BY accountId, account.amount
 ORDER BY accountId;
 
 -- 4.1 task (group by)
 SELECT socialStatus.name, count(card.id)
 FROM socialStatus
-LEFT JOIN client ON client.socialStatusId = socialStatus.id
-LEFT JOIN account ON client.id = account.clientId
-LEFT JOIN card ON card.accountId = account.Id
+	LEFT JOIN client ON client.socialStatusId = socialStatus.id
+	LEFT JOIN account ON client.id = account.clientId
+	LEFT JOIN card ON card.accountId = account.Id
 GROUP BY socialStatus.name;
 
 -- 4.2 task
 SELECT status.name,(
 		SELECT COUNT(*)
 		FROM socialStatus AS status2
-		LEFT JOIN client ON client.socialStatusId = status2.id
-		LEFT JOIN account ON client.id = account.clientId
-		LEFT JOIN card ON card.accountId = account.Id
+			LEFT JOIN client ON client.socialStatusId = status2.id
+			LEFT JOIN account ON client.id = account.clientId
+			LEFT JOIN card ON card.accountId = account.Id
 		WHERE status2.name = status.name
 		) AS cards
 FROM socialStatus AS status;
 
 -- 5 task
-DROP PROCEDURE IF EXISTS add_money;
-
 GO
 
-CREATE PROCEDURE add_money (@status_id INT)
+CREATE PROCEDURE usp_Status_Add_Money (@status_id INT)
 AS
 BEGIN
 	SET NOCOUNT ON;
@@ -145,26 +163,21 @@ BEGIN
 
 	SELECT @result = count(*)
 	FROM account
-	JOIN client ON client.id = account.clientId
-	JOIN socialStatus ON socialStatus.id = client.socialStatusId
+		JOIN client ON client.id = account.clientId
+		JOIN socialStatus ON socialStatus.id = client.socialStatusId
 	WHERE client.socialStatusId = @status_id;
 
 	IF @result = 0
 	BEGIN
-		RAISERROR ('45000',16,1)
-		PRINT 'There is no such status or people with it!';
+		RAISERROR ('There is no such status or people with it!',16,1);
 	END
 
 	UPDATE account
-		SET account.amount = CASE 
-			WHEN @result != 0
-				THEN account.amount + 10
-			ELSE account.amount
-			END
-	FROM account
-	JOIN client ON client.id = account.clientId
-	JOIN socialStatus ON socialStatus.id = client.socialStatusId
-	WHERE socialStatus.id = @status_id;
+		SET account.amount = account.amount + 10
+		FROM account
+			JOIN client ON client.id = account.clientId
+			JOIN socialStatus ON socialStatus.id = client.socialStatusId
+		WHERE socialStatus.id = @status_id;
 END
 
 GO
@@ -172,7 +185,7 @@ GO
 SELECT *
 FROM account;
 
-EXECUTE add_money @status_id = 11;
+EXECUTE usp_Status_Add_Money 2;
 
 SELECT *
 FROM account;
@@ -181,19 +194,16 @@ FROM account;
 SELECT a.id, (
 		SELECT a2.amount - sum(card.amount)
 		FROM account as a2
-		JOIN card ON a2.id = card.accountId
+			JOIN card ON a2.id = card.accountId
 		WHERE a.id = a2.id
 		GROUP BY a2.amount
 		) AS result
 FROM account AS a;
 
 -- task 7
-DROP PROCEDURE
-IF EXISTS transfer_money;
-
 GO
 
-CREATE PROCEDURE transfer_money (@amount INT, @cardId INT)
+CREATE PROCEDURE usp_Card_Transfer_Money (@amount INT, @cardId INT)
 AS
 BEGIN
 	SET NOCOUNT ON;
@@ -205,36 +215,30 @@ BEGIN
 
 		SELECT @free_money = account.amount - sum(card.amount)
 		FROM account
-		JOIN card ON card.accountId = account.id
+			JOIN card ON card.accountId = account.id
 		WHERE account.id = (
 				SELECT account.id
 				FROM account
-				JOIN card ON account.id = card.accountId
+					JOIN card ON account.id = card.accountId
 				WHERE card.id = @cardId
 				)
 		GROUP BY account.id, account.amount;
 
 		IF @amount > @free_money
 		BEGIN
-			RAISERROR ('45000',16,1);
+			RAISERROR ('Insufficent amount on account',16,1);
 		END
 
 		UPDATE card
-		SET card.amount = card.amount + @amount
-		WHERE card.id = @cardId;
-
+			SET card.amount = card.amount + @amount
+			WHERE card.id = @cardId;
    END TRY
    BEGIN CATCH
-
       ROLLBACK TRANSACTION
-	  SELECT 'Insufficent amount on account' AS MESSAGE
-      SELECT ERROR_NUMBER() AS [Номер ошибки],
-             ERROR_MESSAGE() AS [Описание ошибки]
 	  RETURN
-
    END CATCH
 
-	COMMIT TRANSACTION;
+   COMMIT TRANSACTION;
 END
 
 GO
@@ -242,14 +246,12 @@ GO
 SELECT *
 FROM card;
 
-EXEC transfer_money 5000, 9;
+EXEC usp_Card_Transfer_Money 99, 9;
 
 SELECT *
 FROM card;
 
 -- 8 task
-DROP TRIGGER IF EXISTS TR_Amount_Update;
-
 GO
 
 CREATE TRIGGER TR_Amount_Update ON account
@@ -258,22 +260,27 @@ AS
 BEGIN
 	DECLARE @current_cards INT;
 	DECLARE @cards_money INT;
-	DECLARE @old_amount INT;
 	DECLARE @new_amount  INT;
 
-	SELECT @old_amount = amount FROM deleted;
-	SELECT @new_amount = amount FROM inserted;
+	SELECT @new_amount = amount 
+	FROM inserted;
 
 	SELECT @current_cards = count(card.id)
 	FROM account
-	JOIN card ON card.accountId = account.id
-	WHERE account.id = (SELECT id from inserted)
+		JOIN card ON card.accountId = account.id
+	WHERE account.id = (
+		SELECT id 
+		FROM inserted
+		)
 	GROUP BY account.id;
 
 	SELECT @cards_money = sum(card.amount)
 	FROM account
-	JOIN card ON card.accountId = account.id
-	WHERE account.id = (SELECT id from inserted)
+		JOIN card ON card.accountId = account.id
+	WHERE account.id = (
+		SELECT id 
+		FROM inserted
+		)
 	GROUP BY account.id;
 
 	IF @current_cards > 0
@@ -292,7 +299,7 @@ SELECT *
 FROM account;
 
 UPDATE account
-SET account.amount = 10
+SET account.amount = 900
 WHERE account.id = 1;
 
 SELECT *
